@@ -60,11 +60,11 @@ For instance, this config uses [resolvers](http://nginx.org/en/docs/http/ngx_htt
 ```
 chromebox:~/rproxy$ cat dispatch.conf 
 
-# Set your DNS resolver - required
-resolver 8.8.8.8;
-
 # Match your parameters in the URI
 location ~ ^/dispatch/(?P<tenant>[a-zA-Z0-9\-]+)/(?P<command>.*)$ {
+
+    # Set your DNS resolver - required
+    resolver 8.8.8.8;
 
     # Rewrite your proxy URL
     set $full_url "http://${tenant}.domain.com/${command}${is_args}${args}";
