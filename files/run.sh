@@ -59,7 +59,14 @@ EOF
 
 }
 
-for i in `env | grep PROXY_LOCATION_`; do
+# The ASCII code for "=" is lower than the ASCI code for a ... z A ... Z,
+# so sorting in descending order grants that PROXY_LOCATION_ANYTHING=
+# always goes before PROXY_LOCATION_= (the root location).
+# Beware that 0-9 go before "=" in the ASCII table, so if you have both a
+# root location and a location starting with a digit, then the former
+# will appear in the configuration file before the later. I am not sure
+# that it would work as expected.
+for i in `env | grep PROXY_LOCATION_ | sort -r`; do
 
     # Get environment variables names and values
     export _NAM=`echo "${i}" | cut -d '=' -f 1`
