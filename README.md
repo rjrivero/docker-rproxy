@@ -15,10 +15,10 @@ docker build -t rproxy .
 To run:
 
 ```
-docker run --rm -p 8080:8080 --name rproxy rproxy
+docker run --rm -p 8080:80 --name rproxy rproxy
 ```
 
-The container exposes **port 8080**.
+The container exposes **ports 80 and 443**.
 
 Volumes
 -------

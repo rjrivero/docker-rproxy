@@ -15,8 +15,8 @@ VOLUME /etc/nginx/proxy.d
 ADD files/run.sh       /
 ADD files/default.conf /etc/nginx/conf.d/
 
-# Expose nginx port
-EXPOSE 8080
+# Nginx port already exposed by parent container
+# EXPOSE 80
 
 # Run server
 CMD ["/run.sh"]
