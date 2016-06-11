@@ -9,8 +9,8 @@ export IFS='
 
 function proxy {
 
-# Proxy URL
-cat >> /etc/nginx/proxy.conf <<EOF
+  # Proxy URL
+  cat >> /etc/nginx/proxy.conf <<EOF
 location /$_PREFIX {
     proxy_http_version         1.1;
     proxy_pass_request_headers on;
@@ -26,19 +26,25 @@ EOF
 
 }
 
-function proxy_with_static {
+function special_case_docroot {
 
-# Special-case the root location
-if [ -z "$_PREFIX" ]; then
+  # When serving static content for location / , it is better to use "docroot"
+  if [ -z "$_PREFIX" ]; then
     export _BACKEND="ROOT"
     export _DOCROOT="root"    
-else
+  # If the location is not /, on the other hand, better to use "alias"
+  else
     export _BACKEND="$_PREFIX"
     export _DOCROOT="alias"    
-fi
+  fi
 
-# Proxy URL with static content as fallback
-cat >> /etc/nginx/proxy.conf <<EOF
+}
+
+function proxy_with_static {
+
+  # Proxy URL with static content as fallback
+  special_case_docroot
+  cat >> /etc/nginx/proxy.conf <<EOF
 location @$_BACKEND {
     proxy_http_version         1.1;
     proxy_pass_request_headers on;
@@ -59,6 +65,20 @@ EOF
 
 }
 
+function just_static_location {
+
+  # Just add a location for static content
+  special_case_docroot
+  cat >> /etc/nginx/proxy.conf <<EOF
+
+location /$_PREFIX {
+    $_DOCROOT $_PATH;
+    try_files \$uri \$uri/ /;
+}
+EOF
+
+}
+
 # The ASCII code for "=" is lower than the ASCI code for a ... z A ... Z,
 # so sorting in descending order grants that PROXY_LOCATION_ANYTHING=
 # always goes before PROXY_LOCATION_= (the root location).
@@ -74,7 +94,7 @@ for i in `env | grep PROXY_LOCATION_ | sort -r`; do
 
     # xargs to trim whitespaces
     # tr to translate uppercase to lowercase
-    export _PREFIX=`echo ${_NAM} | sed 's/PROXY_LOCATION_//' | tr '[:upper:]' '[:lower:]' | xargs`
+    export _PREFIX=`echo ${_NAM} | sed 's/PROXY_LOCATION_//' | tr '[:upper:]' '[:lower:]' | sed 's/_/\//g' | xargs`
     export _URL=`echo ${_VAL} | cut -d ";" -f 1 | xargs`
     export _PATH=`echo ${_VAL} | cut -s -d ";" -f 2 | xargs`
 
@@ -87,9 +107,20 @@ for i in `env | grep PROXY_LOCATION_ | sort -r`; do
     if [ -z "$_PATH" ]; then
         proxy
     else
-        proxy_with_static
+        if [ -z "$_URL" ]; then
+            just_static_location
+        else
+            proxy_with_static
+        fi
     fi
 
 done
+
+# If PROXY_DOCROOT specified, change root dir
+if [ ! -z "$PROXY_DOCROOT" ]; then
+    export ESC_DOCROOT=`echo "${PROXY_DOCROOT}" | sed -e 's/\\//\\\\\//g'`
+    sed -i "s/root.*opt.www;/root ${ESC_DOCROOT};/" \
+        /etc/nginx/conf.d/default.conf
+fi
 
 exec /usr/sbin/nginx -g "daemon off;"

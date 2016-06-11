@@ -40,13 +40,16 @@ Configuration
 
 The nginx server can be configured using environment variables to proxy different locations to different backend servers. The container recognizes the following environment variables patterns:
 
+  - PROXY_DOCROOT = *PATH*: The path to the document root folder, */opt/www* by default.
   - PROXY_LOCATION_*xxx* = *URL*: proxies any request under /*xxx* to *URL/xxx*
   - PROXY_LOCATION_*xxx* = *URL;PATH*: tries to serve any request under /*xxx* with static files from *PATH*. If no file is found, proxies the request to *URL/xxx*
+  - PROXY_LOCATION_*xxx* = *;PATH*: Serves request with static content under *PATH*
 
 for instance,
 
   - PROXY_LOCATION_REMOTE="http://other.server:3000" will forward any request under */remote* to *http://other.server:3000/remote*
   - PROXY_LOCATION_CONFIG="http://other.server:3000;/opt/www" will try to serve any request under */config* with static files in */opt/www*, and fallback to *http://other.server:3000/config* if no static file is found.
+  - PROXY_LOCATION_AUTH=;/opt/www/auth/test will serve requests to */auth* with static resources under */opt/www/auth/test*
 
 You can also use an empty location (*PROXY_LOCATION_=...*) to proxy requests to the root location (*/*).
 
