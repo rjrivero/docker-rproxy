@@ -27,13 +27,14 @@ The embedded nginx server uses:
 
   - **/opt/www/** as document root.
   - **/etc/nginx/proxy.d/** for advanced configuration files.
+  - **/etc/nginx/rewrite.d/** for top-level rewrite rules
 
 Users
 -----
 
 The nginx service is run by user nginx, group nginx. The uid and gid are defined in the official [Docker Nginx container](https://hub.docker.com/_/nginx/) and currently are **104** and **107** respectively.
 
-Any file you mount at **/opt/www** must be readable by that user; as well as any particular configuration you mount under **/etc/nginx/proxy.d**.
+Any file you mount at **/opt/www** must be readable by that user; as well as any particular configuration you mount under **/etc/nginx/proxy.d** or **/etc/nginx/rewrite.d**.
 
 Configuration
 -------------
@@ -56,7 +57,9 @@ You can also use an empty location (*PROXY_LOCATION_=...*) to proxy requests to 
 Additional config
 -----------------
 
-If you need more advanced proxy settings, you can drop a configuration file ending in *.conf* inside **/etc/nginx/proxy.d**, and it will be read at startup.
+If you need more advanced proxy settings, you can drop a configuration file ending in *.conf* inside **/etc/nginx/proxy.d** or **/etc/nginx/rewrite.d**, and they will be read at startup.
+
+The difference between those locations is that files in **rewrite.d** are read before files in **proxy.d**. This is intended to make sure that rewrite configuration happens before location configuration, so the locations already receive the rewritten URLs.
 
 For instance, this config uses [resolvers](http://nginx.org/en/docs/http/ngx_http_core_module.html#resolver) and variables to dynamically build and resolve the backend server's URL:
 
@@ -85,5 +88,5 @@ location ~ ^/dispatch/(?P<tenant>[a-zA-Z0-9\-]+)/(?P<command>.*)$ {
 }
 ```
 
-Couple this with a dns resolver with dynamic backend, such as [powerdns](https://www.powerdns.com/), and you can have a poor man's programmable reverse proxy.
+Couple this with a dns resolver with dynamic backends, such as [powerdns](https://www.powerdns.com/), and you can have a poor man's database-backed reverse proxy.
 

@@ -8,6 +8,8 @@ ENTRYPOINT ["/tini", "--"]
 
 # Static content (document root)
 VOLUME /opt/www
+# Additional rewrite rules
+VOLUME /etc/nginx/rewrite.d
 # Additional proxy rules
 VOLUME /etc/nginx/proxy.d
 
